@@ -1,0 +1,35 @@
+# Genetic Sudoku Solver
+
+Projekt ten to implementacja generatora i rozwiązywacza Sudoku z wykorzystaniem algorytmu genetycznego.
+
+## Opis
+
+Program ma na celu pokazanie, jak algorytmy ewolucyjne mogą być wykorzystywane do rozwiązywania problemów kombinatorycznych na przykładzie Sudoku. Algorytm genetyczny generuje populację możliwych rozwiązań, a następnie iteracyjnie je udoskonala poprzez selekcję, krzyżowanie i mutacje, aż do znalezienia poprawnej planszy Sudoku.
+
+## Główne funkcjonalności
+
+- Generowanie początkowej populacji losowych plansz Sudoku
+- Ewolucja populacji z wykorzystaniem operatorów genetycznych
+- Ocena dopasowania (fitness) każdej planszy
+- Wyszukiwanie poprawnego rozwiązania Sudoku
+
+## Technologie
+
+- Python 3
+- Algorytm genetyczny
+
+## Struktura projektu
+
+-- ??
+
+## Uruchomienie
+
+1. Sklonuj repozytorium
+2. Uruchom `main.py`:
+	```bash
+	python main.py
+	```
+
+## Autor
+
+Projekt na potrzeby zajęć Sztuczna Inteligencja
