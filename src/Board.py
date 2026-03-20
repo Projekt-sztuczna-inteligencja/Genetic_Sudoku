@@ -44,8 +44,12 @@ class Board:
         return ret
     def random(self):
         import random
-        for cell in self.cells:
-            cell.value = random.choice(self.characters)
+        for y in range(self.size):
+            values = self.characters[:]
+            random.shuffle(values)
+            for x in range(self.size):
+                self.get_cell(x, y).value = values[x]
+            
     def __str__(self) -> str:
         rows = []
         for y in range(self.size):

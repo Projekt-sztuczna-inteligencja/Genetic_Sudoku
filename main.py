@@ -9,8 +9,7 @@ def main():
   for cell in sq1:
     print(cell)
   print(board)
-  gen = src.Genetic.Genethic(10, 0.1)
-  gen.create_population()
-  gen.print_population()
+  gen = src.Genetic.Genethic(2, 0.01, 100000)
+  gen.run()
 
 main()
