@@ -16,7 +16,11 @@ class Board:
             raise ValueError(f"Wartość {value} nie znajduje się w dozwolonych znakach!")
         self.get_cell(x, y).value = value
 
-    def get_cell(self, x: int, y: int) -> Cell:
+    
+
+    def get_cell(self, x: int, y: int = -100) -> Cell:
+        if y == -100:
+            return self.cells[x]
         return self.cells[y * self.size + x]
 
     def get_column(self, x: int) -> list[Cell]:
@@ -38,7 +42,10 @@ class Board:
                 x += 1
             y += 1
         return ret
-      
+    def random(self):
+        import random
+        for cell in self.cells:
+            cell.value = random.choice(self.characters)
     def __str__(self) -> str:
         rows = []
         for y in range(self.size):
@@ -48,3 +55,26 @@ class Board:
             ]
             rows.append(" ".join(row_chars))
         return "\n".join(rows) + "\n"
+
+    def get_square_index(self, x: int, y: int) -> int:
+        square_size = int(self.size ** 0.5)
+        return (y // square_size) * square_size + (x // square_size)
+
+    def cell_valid(self, x: int, y: int = -100) -> bool:
+        if(y == -100):
+            y = x // self.size
+            x = x % self.size
+        value = self.get_cell(x, y).value
+        if value == ' ':
+            return True
+        for col in range(self.size):
+            if x != col and self.get_cell(col, y).value == value:
+                return False
+        for row in range(self.size):
+            if y != row and self.get_cell(x, row).value == value:
+                return False
+        square_index = self.get_square_index(x, y)
+        square = self.get_square(square_index)
+        if any(cell.value == value and cell != self.get_cell(x, y) for cell in square):
+            return False
+        return True

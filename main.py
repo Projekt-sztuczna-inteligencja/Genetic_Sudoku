@@ -1,5 +1,5 @@
 import src.Board
-
+import src.Genetic
 def main():
   board = src.Board.Board()
   for y in range(9):
@@ -9,4 +9,8 @@ def main():
   for cell in sq1:
     print(cell)
   print(board)
+  gen = src.Genetic.Genethic(10, 0.1)
+  gen.create_population()
+  gen.print_population()
+
 main()
