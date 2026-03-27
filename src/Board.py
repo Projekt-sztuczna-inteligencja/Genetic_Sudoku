@@ -42,13 +42,16 @@ class Board:
                 x += 1
             y += 1
         return ret
+    
+    
     def random(self):
         import random
-        for y in range(self.size):
-            values = self.characters[:]
+        values = self.characters[:]
+        for nr_kwadratu in range(self.size):
+            kwadrat = self.get_square(nr_kwadratu)
             random.shuffle(values)
-            for x in range(self.size):
-                self.get_cell(x, y).value = values[x]
+            for i in range(self.size):
+                kwadrat[i].value = values[i]
             
     def __str__(self) -> str:
         rows = []
