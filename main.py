@@ -1,5 +1,6 @@
 from src.Board import Board
-from src.Genetic import Genetic
+from src.Genetic.GeneticSudoku import GeneticSudoku
+from src.Genetic.FastSudoku import FastSudoku
 def main():
   board = Board()
   for y in range(9):
@@ -17,7 +18,14 @@ def main():
 
 
 
-  gen = Genetic(population_size=200, mutation_rate=0.6, generations=100000, elite_size=10)
-  gen.run()
+  gen = GeneticSudoku(populationSize=1000, mutationRate=0.6, generations=100000, eliteSize=50,
+                crossoverFunctionName="square")
+  
+  gen = FastSudoku(populationSize=2000, mutationRate=0.6, generations=100000, eliteSize=50, crossoverFunctionName="square")
+
+  winner = gen.run()
+  print("Winner:")
+  print(winner)
+
 
 main()
