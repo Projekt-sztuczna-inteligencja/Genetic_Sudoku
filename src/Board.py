@@ -1,87 +1,77 @@
-from src.Cell import Cell
-from typing import Optional
-
 class Board:
-    def __init__(self, characters: Optional[list[str]] = None):
-        if characters is None:
-            characters = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
-            
-        self.characters: list[str] = characters
-        self.size: int = len(self.characters)
+    def __init__(self, board_data: list[str]):
+        # Przyjmujemy płaską listę 81 stringów wygenerowaną przez algorytm
+        if len(board_data) != 81:
+            raise ValueError("Plansza musi mieć dokładnie 81 elementów!")
+        self.board_data = board_data
+
+    def _is_valid(self, index: int) -> bool:
+        """Prywatna metoda sprawdzająca, czy komórka nie ma duplikatów w wierszu, kolumnie i kwadracie."""
+        value = self.board_data[index]
         
-        self.cells: list[Cell] = [Cell(' ') for _ in range(self.size ** 2)]
+        # Traktujemy puste miejsca jako błędy
+        if value in (' ', '.', '0'):
+            return False 
 
-    def write(self, x: int, y: int, value: str):
-        if value not in self.characters:
-            raise ValueError(f"Wartość {value} nie znajduje się w dozwolonych znakach!")
-        self.get_cell(x, y).value = value
-
-    
-
-    def get_cell(self, x: int, y: int = -100) -> Cell:
-        if y == -100:
-            return self.cells[x]
-        return self.cells[y * self.size + x]
-
-    def get_column(self, x: int) -> list[Cell]:
-        return [self.get_cell(x, y) for y in range(self.size)]
-
-    def get_row(self, y: int) -> list[Cell]:
-        return [self.get_cell(x, y) for x in range(self.size)]
-
-    def get_square(self, nr: int) -> list[Cell]:
-        ret = []
-        square_size = int(self.size ** 0.5)
-        x0 = (nr % square_size) * square_size
-        y = (nr // square_size) * square_size
+        row = index // 9
+        col = index % 9
         
-        for _ in range(square_size):
-            x = x0
-            for _ in range(square_size):
-                ret.append(self.get_cell(x, y))
-                x += 1
-            y += 1
-        return ret
-    
-    
-    def random(self):
-        import random
-        values = self.characters[:]
-        for nr_kwadratu in range(self.size):
-            kwadrat = self.get_square(nr_kwadratu)
-            random.shuffle(values)
-            for i in range(self.size):
-                kwadrat[i].value = values[i]
-            
-    def __str__(self) -> str:
-        rows = []
-        for y in range(self.size):
-            row_chars = [
-                self.get_cell(x, y).value if self.get_cell(x, y).value != ' ' else '.'
-                for x in range(self.size)
-            ]
-            rows.append(" ".join(row_chars))
-        return "\n".join(rows) + "\n"
-
-    def get_square_index(self, x: int, y: int) -> int:
-        square_size = int(self.size ** 0.5)
-        return (y // square_size) * square_size + (x // square_size)
-
-    def cell_valid(self, x: int, y: int = -100) -> bool:
-        if(y == -100):
-            y = x // self.size
-            x = x % self.size
-        value = self.get_cell(x, y).value
-        if value == ' ':
-            return True
-        for col in range(self.size):
-            if x != col and self.get_cell(col, y).value == value:
+        # 1. Sprawdzanie wiersza
+        for c in range(9):
+            if c != col and self.board_data[row * 9 + c] == value:
                 return False
-        for row in range(self.size):
-            if y != row and self.get_cell(x, row).value == value:
+                
+        # 2. Sprawdzanie kolumny
+        for r in range(9):
+            if r != row and self.board_data[r * 9 + col] == value:
                 return False
-        square_index = self.get_square_index(x, y)
-        square = self.get_square(square_index)
-        if any(cell.value == value and cell != self.get_cell(x, y) for cell in square):
-            return False
+                
+        # 3. Sprawdzanie kwadratu 3x3
+        start_row = (row // 3) * 3
+        start_col = (col // 3) * 3
+        for r in range(start_row, start_row + 3):
+            for c in range(start_col, start_col + 3):
+                idx = r * 9 + c
+                if idx != index and self.board_data[idx] == value:
+                    return False
+                    
         return True
+
+    def __str__(self) -> str:
+        # Kody ANSI do kolorowania tekstu w konsoli
+        RED = '\033[91m'
+        GREEN = '\033[92m'
+        RESET = '\033[0m'
+        
+        errors = 0
+        lines = []
+        
+        for r in range(9):
+            # Rysowanie poziomych linii oddzielających kwadraty 3x3
+            if r % 3 == 0 and r != 0:
+                lines.append("-" * 21)
+            
+            row_str = []
+            for c in range(9):
+                # Rysowanie pionowych linii oddzielających kwadraty 3x3
+                if c % 3 == 0 and c != 0:
+                    row_str.append("|")
+                
+                idx = r * 9 + c
+                val = self.board_data[idx]
+                
+                # Kolorowanie i zliczanie błędów
+                if self._is_valid(idx):
+                    row_str.append(f"{GREEN}{val}{RESET}")
+                else:
+                    row_str.append(f"{RED}{val}{RESET}")
+                    errors += 1
+            
+            lines.append(" ".join(row_str))
+            
+        # Dodanie podsumowania na dole
+        lines.append(f"\n{RED}Liczba niepoprawnych komórek: {errors}{RESET}")
+        if errors == 0:
+            lines.append(f"{GREEN}SUDOKU ROZWIĄZANE IDEALNIE!{RESET}")
+            
+        return "\n".join(lines) + "\n"

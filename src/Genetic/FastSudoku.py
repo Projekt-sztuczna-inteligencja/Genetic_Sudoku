@@ -1,6 +1,6 @@
 import random
+from src.Board import Board
 from src.Genetic.Genetic import Genetic
-from src.Genetic.Cells import _cell_valid
 from src.Genetic.CrossoverFast import crossoverType, getCrossoverMethod
 
 class FastSudoku(Genetic[list[str]]):
@@ -20,14 +20,7 @@ class FastSudoku(Genetic[list[str]]):
   def crossover(self, parent1: list[str], parent2: list[str]) -> list[str]:
     return self.crossoverFunc(parent1, parent2)
     # Losujemy punkt cięcia: po 1. paśmie (indeks 27) lub po 2. paśmie (indeks 54)
-    # Używamy randint(1, 2), żeby mieć pewność, że dziecko zawsze dostanie geny od obu rodziców
-    band = random.randint(1, 2)
-    crossover_point = band * 27 
-    
-    # Tworzymy dziecko sklejając wycinek pierwszego rodzica z wycinkiem drugiego
-    child = parent1[:crossover_point] + parent2[crossover_point:]
-    
-    return child
+   
 
   
 
@@ -89,8 +82,8 @@ class FastSudoku(Genetic[list[str]]):
 
   def printPopulation(self, nr = 0):
         
-        fitenss = self.fitness(self.population)
-        score = [individual[1] for individual in fitenss]
+        fitness = self.fitness(self.population)
+        score = [individual[1] for individual in fitness]
 
         print(f"---- Generation {nr} ----")
         print(f"Best score: {max(score) * 100:.2f}%")
@@ -99,5 +92,6 @@ class FastSudoku(Genetic[list[str]]):
         print(f"Average score: {sum(score) / len(score) * 100:.2f}%")
         print(f"Used Methods: row | Mutation Rate: {self.mutationRate * 100:.2f}% | Elite Size: {self.eliteSize}")
         print("Best board:")
-        bestBoard = self.population[score.index(max(score))]
-        print(bestBoard)
+        pretty_board = Board(fitness[0][0])
+        print("Best board:")
+        print(pretty_board)

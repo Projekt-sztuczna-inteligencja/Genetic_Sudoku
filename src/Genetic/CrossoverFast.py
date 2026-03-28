@@ -3,7 +3,6 @@ from typing import Callable, Literal
 
 
 crossoverType = Literal[ "onepoint", "twopoint", "square"]
-
 # square-based crossover
 # randomly selecting squares from each parent to form the child board.
 
