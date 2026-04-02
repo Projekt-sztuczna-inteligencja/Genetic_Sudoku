@@ -5,8 +5,10 @@ from typing import Generic, TypeVar
 
 T = TypeVar('T')
 
+
 class Genetic(ABC, Generic[T]):
-    def __init__(self, populationSize: int, mutationRate: float, generations: int, eliteSize: int, individualType: type[T]):
+    def __init__(self, populationSize: int, mutationRate: float, generations: int, eliteSize: int,
+                 individualType: type[T]):
         self.populationSize = populationSize
         self.mutationRate = mutationRate
         self.generations = generations
@@ -25,10 +27,11 @@ class Genetic(ABC, Generic[T]):
     @abstractmethod
     def selectParents(self, population: list[tuple[T, float]], nrParents: int) -> list[T]:
         pass
-    
+
     @abstractmethod
     def mutate(self, individual: T) -> T:
         pass
+
     @abstractmethod
     def printPopulation(self, nr: int):
         pass
@@ -37,8 +40,8 @@ class Genetic(ABC, Generic[T]):
     def createRandomIndividual(self) -> T:
         pass
 
-    # run the algorithm 
-    # run the algorithm 
+    # run the algorithm
+    # run the algorithm
     def run(self, stop_event=None):
         self.createPopulation()
         start_time = time()
@@ -54,8 +57,8 @@ class Genetic(ABC, Generic[T]):
             self.population = self.nextGeneration()
             if len(self.population) == 1:
                 return self.population[0]
-    
-    #creates initial population
+
+    # creates initial population
     def createPopulation(self):
         for _ in range(self.populationSize):
             temp = self.createRandomIndividual()
@@ -76,39 +79,59 @@ class Genetic(ABC, Generic[T]):
             children.append(self.crossover(parent1, parent2))
         return children
 
-    
     def mutatePopulation(self, individuals: list[T]):
         newPopulation = []
         for individual in individuals:
-            
-            
             newPopulation.append(self.mutate(individual))
-        return newPopulation    
-            
+        return newPopulation
 
-    # returns sorted population based on fitness score
+        # returns sorted population based on fitness score
+
     # def sortPopulation(self, population: list[T]) -> list[T]:
     #     ranked = self.fitness(population)
     #     return [individual[0] for individual in ranked]
 
     def nextGeneration(self):
-        # elita <- tok_n_elite(populacja) (n_elite)
-        # rodzice <- selekcja(populacja, n_parents) (np. turniejowa) n_parents = n_children = pop_size - n_elite
-        # dzieci <- crossover_population(rodzice, n_children)
-        # dzieci <- mutacja(dzieci) (z mut. rate)
-        # new_population <- elita + dzieci
-        newPopulation : list[T] = []
+        newPopulation: list[T] = []
         scoredPopulation = self.fitness(self.population)
+
         if scoredPopulation[0][1] == 1.0:
             return [scoredPopulation[0][0]]
+
+        best_score = scoredPopulation[0][1]
+
+        # --- MECHANIZM KATASTROFY + LOCAL SEARCH ---
+        if not hasattr(self, 'stagnation_count'):
+            self.stagnation_count = 0
+            self.last_best_score = best_score
+
+        if best_score == self.last_best_score:
+            self.stagnation_count += 1
+        else:
+            self.last_best_score = best_score
+            self.stagnation_count = 0
+
         sortedPopulation = [i[0] for i in scoredPopulation]
-        elite : list[T] = sortedPopulation[: self.eliteSize]
+        elite: list[T] = sortedPopulation[: self.eliteSize]
+
+        # Gdy utknęliśmy na 50 pokoleń - Memetic Local Search + Meteoryt!
+        if self.stagnation_count > 30:
+            self.stagnation_count = 0
+
+            # Algorytm Memetyczny: odpalamy logiczne przeszukiwanie dla lidera
+            if hasattr(self, 'localSearch'):
+                elite[0] = self.localSearch(elite[0])
+
+            newPopulation = [elite[0]]  # Zostawiamy TYLKO wybitnego lidera
+            # Resztę populacji (1999 osobników) losujemy od nowa (świeża krew!)
+            for _ in range(self.populationSize - 1):
+                newPopulation.append(self.createRandomIndividual())
+            return newPopulation
+        # -------------------------------------------
+
         parents = self.selectParents(scoredPopulation, self.populationSize - self.eliteSize)
         children = self.crossoverPopulation(parents, self.populationSize - self.eliteSize)
         children = self.mutatePopulation(children)
         newPopulation = elite + children
         return newPopulation
 
-    
-
-    

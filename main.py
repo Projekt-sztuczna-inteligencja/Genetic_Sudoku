@@ -6,10 +6,34 @@ from src.Genetic.CrossoverFast import crossoverType
 from src.Board import Board  # <-- Dodane do ładnego rysowania planszy
 from typing import get_args
 
+def transform_to_squares(puzzle):
+    #Przerabia klasyczną plansze na DNA algorytmu
+    sq_puzzle = [0]*81
+    for r in range(9):
+        for c in range(9):
+            sq_idx = (r//3)*27 + (c//3)*9 + (r%3)*3 + (c%3)
+            sq_puzzle[sq_idx] = puzzle[r*9 + c]
+    return sq_puzzle
 
 # 1. Tworzymy funkcję, którą każdy proces odpali u siebie
 def run_island(island_id: int, stop_event):
     print(f"🏝️ Wyspa {island_id} startuje...")
+
+    # Ekstremalne Sudoku z absolutnym minimum wskazówek (17 cyfr)
+    # Najtrudniejsze Sudoku świata wg Arto Inkali (21 wskazówek)
+    sample_puzzle = [
+        8, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 3, 6, 0, 0, 0, 0, 0,
+        0, 7, 0, 0, 9, 0, 2, 0, 0,
+        0, 5, 0, 0, 0, 7, 0, 0, 0,
+        0, 0, 0, 0, 4, 5, 7, 0, 0,
+        0, 0, 0, 1, 0, 0, 0, 3, 0,
+        0, 0, 1, 0, 0, 0, 0, 6, 8,
+        0, 0, 8, 5, 0, 0, 0, 1, 0,
+        0, 9, 0, 0, 0, 0, 4, 0, 0
+    ]
+    genetic_puzzle = transform_to_squares(sample_puzzle)
+
     available_crossovers = list(get_args(crossoverType))
     c = available_crossovers[island_id % len(available_crossovers)]
 
@@ -18,7 +42,8 @@ def run_island(island_id: int, stop_event):
         mutationRate=0.6,
         generations=100000,
         eliteSize=50,
-        crossoverFunctionName=c
+        crossoverFunctionName=c,
+        initial_board=genetic_puzzle
     )
 
     # Odpalamy algorytm przekazując mu flagę!
