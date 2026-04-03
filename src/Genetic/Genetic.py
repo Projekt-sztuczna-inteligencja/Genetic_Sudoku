@@ -7,11 +7,12 @@ T = TypeVar('T')
 
 class Genetic(ABC, Generic[T]):
     def __init__(self, populationSize: int, mutationRate: float, generations: int, eliteSize: int, individualType: type[T]):
+        self.id = random.randint(1, 1000000) 
         self.populationSize = populationSize
         self.mutationRate = mutationRate
         self.generations = generations
         self.eliteSize = eliteSize
-        self.T = individualType  # Zostawiamy to, żeby móc tworzyć nowe obiekty w createPopulation
+        self.T = individualType 
         self.population: list[T] = []
 
     @abstractmethod
@@ -37,7 +38,6 @@ class Genetic(ABC, Generic[T]):
     def createRandomIndividual(self) -> T:
         pass
 
-    # run the algorithm 
     # run the algorithm 
     def run(self):
         self.createPopulation()
@@ -81,11 +81,6 @@ class Genetic(ABC, Generic[T]):
             newPopulation.append(self.mutate(individual))
         return newPopulation    
             
-
-    # returns sorted population based on fitness score
-    # def sortPopulation(self, population: list[T]) -> list[T]:
-    #     ranked = self.fitness(population)
-    #     return [individual[0] for individual in ranked]
 
     def nextGeneration(self):
         # elita <- tok_n_elite(populacja) (n_elite)
