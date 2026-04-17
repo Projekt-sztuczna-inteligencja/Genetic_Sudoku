@@ -3,7 +3,7 @@ import time
 from multiprocessing import Manager
 from typing import get_args
 
-from src.Genetic.FastSudoku import FastSudoku
+from src.Genetic.SudokuEngine import FastSudoku
 from src.Genetic.CrossoverMethod import crossoverType
 from src.SudokuBoard import Board
 
