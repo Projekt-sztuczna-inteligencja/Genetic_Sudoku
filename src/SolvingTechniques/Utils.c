@@ -22,7 +22,15 @@ int isCandidatePossible(unsigned short mask, int val) {
   return (mask & (1 << (val - 1))) != 0;
 }
 
-
+// 4. Liczy, ile bitów jest zapalonych w masce (ile kandydatów pozostało)
+int countCandidates(unsigned short mask) {
+  int count = 0;
+  while (mask) {
+    mask &= (mask - 1);
+    count++;
+  }
+  return count;
+}
 
 // ################################ Metody maski ##############################
 

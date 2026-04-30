@@ -9,6 +9,7 @@
 int hasSingleCandidate(unsigned short mask);
 int getCandidateValue(unsigned short mask);
 int isCandidatePossible(unsigned short mask, int val);
+int countCandidates(unsigned short mask);
 
 void createMask(char* sudoku, unsigned short* masks);
 void updateMasksAfterPlacement(unsigned short* masks, int idx, int val);

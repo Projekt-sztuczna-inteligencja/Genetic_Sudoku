@@ -4,85 +4,152 @@
 #include <stdio.h>
 #include <string.h>
 #include "src/SolvingTechniques/Utils.h"
-#include "src/SolvingTechniques/EasyTechniques.h"
+#include "src/SolvingTechniques/Techniques.h"
+#include "Sudokus/SudokuReader.h"
+#include "src/Rating/Rater.h"
 
 #define true 1
 #define false 0
 
-void testAllMethods(SudokuMethod methods[], char* methodNames[], int numMethods);
-void testbox(int method(char* sudoku, unsigned short* masks), char* name);
+void testAllMethods(SudokuMethodRecord methodRecords[], int numMethods, SudokuRecord sudokus[], int numSudokus);
+void testbox(SudokuMethodRecord methodRecord, SudokuRecord sudokus[], int numSudokus);
+int validateSudoku(char* sudoku);
+void rateSudokus(SudokuRecord sudokus[], int numSudokus, SudokuMethodRecord methodRecords[], int numMethods);
+void runGraderDiagnostics(SudokuRecord records[], int numPuzzles, const char* datasetName, SudokuMethodRecord methodRecords[], int numMethods);
 
-char sudokus[2][82] = {
-  "042005006197000040560400109801300260900071450003256000005032700004590600000760080",
-  "000102000060000070008000900400000003050007000200080001009000805070000060000304000" };
-char solutions[][82] = {
-    "342915876197683542568427139851349267926871453473256918685132794734598621219764385",
-    "345162789261984375978357942487591623659273418123846597895417236734629581612538974" };
 
 /*
-gcc SolvingTechniques.c src/SolvingTechniques/Utils.c src/SolvingTechniques/EasyTechniques.c
+gcc SolvingTechniques.c src/SolvingTechniques/Utils.c src/SolvingTechniques/Techniques.c Sudokus/SudokuReader.c src/Rating/Rater.c
 */
-int main() {
-  printf("\n");
-  void* methods[] = { findNakedSingles, findHiddenSinglesInBoxes, findHiddenSinglesInRowsAndCols,applyPointingPairs };
-  char* methodNames[] = { "Naked Single", "Hidden Single Box", "Hidden Single Row/Col","Pointing Pairs" };
 
-  for (int i = 0; i < sizeof(methods) / sizeof(methods[0]); i++) {
-    testbox(methods[i], methodNames[i]);
+
+int main() {
+
+  printf("=================================================\n");
+  printf("        SUDOKU SE GRADER - DIAGNOSTICS          \n");
+  printf("=================================================\n");
+
+  const char* filenames[] = {
+      "Sudokus/easy.txt",
+      "Sudokus/medium.txt",
+      "Sudokus/hard.txt"
+  };
+  int numFiles = sizeof(filenames) / sizeof(filenames[0]);
+
+  for (int i = 0; i < numFiles; i++) {
+    SudokuRecord* puzzles = NULL;
+    int count = readSudokusFromFile(filenames[i], &puzzles);
+
+    if (count > 0) {
+      runGraderDiagnostics(puzzles, count, filenames[i], methodRecords, numMethods);
+      free(puzzles);
+    }
+    else {
+      printf("\n[ERROR] Could not load or empty file: %s\n", filenames[i]);
+    }
   }
 
-  testAllMethods((SudokuMethod*)methods, methodNames, 4);
+  printf("\nAll datasets processed.\n");
+
+
 
   return 0;
 }
 
-// ################################ Funkjce testowe ##############################
+// ################################ Funkjce testowe ################################
 
-void testbox(int method(char* sudoku, unsigned short* masks), char* name) {
-  // scanning boxes test
+void runGraderDiagnostics(SudokuRecord records[], int numPuzzles, const char* datasetName, SudokuMethodRecord methodRecords[], int numMethods) {
+  printf("\n[ANALYZING] %s\n", datasetName);
+  printf("-------------------------------------------------\n");
+
+  int solvedCount = 0;
+  int perfectMatches = 0;
+  float totalError = 0.0f;
+  float maxError = 0.0f;
+
+  for (int i = 0; i < numPuzzles; i++) {
+    // Wywołanie gradingu na digits z rekordu
+    float calculatedRating = getSERating(records[i].digits, methodRecords, numMethods);
+
+    if (calculatedRating < 0) continue; // Pomiń, jeśli nie rozwiązano
+
+    float givenRating = atof(records[i].rating);
+    float currentError = fabsf(calculatedRating - givenRating);
+
+    solvedCount++;
+    totalError += currentError;
+
+    if (currentError < 0.01f) perfectMatches++;
+    if (currentError > maxError) maxError = currentError;
+
+    // Raportowanie dużych rozbieżności (np. błąd > 0.5)
+    if (currentError > 0.5f) {
+      //printf("  Mismatch [%s]: Calc: %.1f | Given: %.1f\n",
+        //records[i].hash, calculatedRating, givenRating);
+    }
+  }
+
+  // Obliczenia statystyczne
+  if (solvedCount > 0) {
+    float avgError = totalError / solvedCount;
+    float successRate = ((float)solvedCount / numPuzzles) * 100.0f;
+    float matchRate = ((float)perfectMatches / solvedCount) * 100.0f;
+
+    printf("\n  Summary for %s:\n", datasetName);
+    printf("  > Puzzles processed:  %d\n", numPuzzles);
+    printf("  > Solved by engine:   %d (%.1f%%)\n", solvedCount, successRate);
+    printf("  > Perfect SE Match:   %d (%.1f%%)\n", perfectMatches, matchRate);
+    printf("  > Avg SE Deviation:   %.3f\n", avgError);
+    printf("  > Max SE Deviation:   %.1f\n", maxError);
+  }
+  else {
+    printf("  > No puzzles could be solved in this dataset.\n");
+  }
+  printf("-------------------------------------------------\n");
+}
+
+void testbox(SudokuMethodRecord methodRecord, SudokuRecord sudokus[], int numSudokus) {
   unsigned short mask[81];
-  for (int s = 0; s < 2; s++) {
-    char* sudoku = strcpy((char*)malloc(82), sudokus[s]);
-    char* solution = solutions[s];
+  for (int s = 0; s < numSudokus; s++) {
+    char* sudoku = strcpy((char*)malloc(82), sudokus[s].digits);
     createMask(sudoku, mask);
     int try = 1;
     while (try == 1) {
-      try = method(sudoku, mask);
-      // printf("After method call:\n");
-      // for (int i = 0; i < 9; i++) {
-      //   for (int j = 0; j < 9; j++) {
-      //     printf("%c ", sudoku[i * 9 + j]);
-      //   }
-      //   printf("\n");
-      // }
+      try = methodRecord.method(sudoku, mask);
     }
-    if (strcmp(sudoku, solution) == 0)
-      printf("Test passed for method %s on sudoku %d!\n", name, s);
+    if (validateSudoku(sudoku))
+      printf("Test passed for method %s on sudoku %d!\n", methodRecord.name, s);
     else
-      printf("Test failed for method %s on sudoku %d!\n", name, s);
+      printf("Test failed for method %s on sudoku %d!\n", methodRecord.name, s);
     free(sudoku);
   }
 }
-void testAllMethods(SudokuMethod methods[], char* methodNames[], int numMethods) {
+
+void testAllMethods(SudokuMethodRecord methodRecords[], int numMethods, SudokuRecord sudokus[], int numSudokus) {
   unsigned short mask[81];
-  for (int s = 0; s < 2; s++) {
-    printf("\n=== Rozwiazywanie Sudoku nr %d ===\n", s + 1);
-    createMask(sudokus[s], mask);
+  int solvedCount = 0;
+  int hardestSudoku = 0;
+  for (int s = 0; s < numSudokus; s++) {
+    char currentSudoku[82];
+    strcpy(currentSudoku, sudokus[s].digits);
+
+    // printf("\n=== Rozwiazywanie Sudoku nr %d ===\n", s + 1);
+    createMask(currentSudoku, mask);
     int puzzleSolved = 0;
     while (1) {
       int progressMadeThisRound = 0;
       for (int i = 0; i < numMethods - 1; i++) {
-        if (methods[i](sudokus[s], mask)) {
+        if (methodRecords[i].method(currentSudoku, mask)) {
           progressMadeThisRound = 1;
-          printf("Applied method: %s\n", methodNames[i]);
+          //printf("Applied method: %s\n", methodRecords[i].name);
           break;
         }
       }
       if (!progressMadeThisRound && numMethods > 0) {
         int lastIdx = numMethods - 1;
-        if (methods[lastIdx](sudokus[s], mask)) {
+        if (methodRecords[lastIdx].method(currentSudoku, mask)) {
           progressMadeThisRound = 1;
-          printf("Applied method: %s (Metoda Redukcyjna / Ostatnia Deska Ratunku)\n", methodNames[lastIdx]);
+          //printf("Applied method: %s\n", methodRecords[lastIdx].name);
         }
       }
       if (!progressMadeThisRound) {
@@ -90,11 +157,54 @@ void testAllMethods(SudokuMethod methods[], char* methodNames[], int numMethods)
       }
     }
 
-    if (strcmp(sudokus[s], solutions[s]) == 0) {
-      printf("Sukces! Sudoku %d zostalo poprawnie rozwiazane.\n", s + 1);
+    if (validateSudoku(currentSudoku)) {
+      // printf("Sukces! Sudoku %d zostalo poprawnie rozwiazane.\n", s + 1);
+      solvedCount++;
+      if (hardestSudoku < (int)sudokus[s].rating) hardestSudoku = s;
     }
     else {
-      printf("Porazka. Solver utknal i nie potrafi rozwiazac Sudoku %d w pelni.\n", s + 1);
+      // printf("Porazka. Solver utknal i nie potrafi rozwiazac Sudoku %d w pelni.\n", s + 1);
     }
   }
+  printf("Liczba rozwiazanych Sudoku: %f%%\n", (float)solvedCount / numSudokus * 100);
+  printf("Najtrudniejsze rozwiazane Sudoku: %d (ocena: %s)\n", hardestSudoku + 1, sudokus[hardestSudoku].rating);
+}
+
+int validateSudoku(char* sudoku) {
+  // Sprawdzenie wierszy
+  for (int row = 0; row < 9; row++) {
+    int seen[10] = { 0 };
+    for (int col = 0; col < 9; col++) {
+      int val = sudoku[row * 9 + col] - '0';
+      if (val < 1 || val > 9 || seen[val]) return false;
+      seen[val] = 1;
+    }
+  }
+
+  // Sprawdzenie kolumn
+  for (int col = 0; col < 9; col++) {
+    int seen[10] = { 0 };
+    for (int row = 0; row < 9; row++) {
+      int val = sudoku[row * 9 + col] - '0';
+      if (val < 1 || val > 9 || seen[val]) return false;
+      seen[val] = 1;
+    }
+  }
+
+  // Sprawdzenie pudełek
+  for (int boxId = 0; boxId < 9; boxId++) {
+    int seen[10] = { 0 };
+    int boxStartRow = (boxId / 3) * 3;
+    int boxStartCol = (boxId % 3) * 3;
+
+    for (int r = 0; r < 3; r++) {
+      for (int c = 0; c < 3; c++) {
+        int val = sudoku[(boxStartRow + r) * 9 + (boxStartCol + c)] - '0';
+        if (val < 1 || val > 9 || seen[val]) return false;
+        seen[val] = 1;
+      }
+    }
+  }
+
+  return true;
 }
