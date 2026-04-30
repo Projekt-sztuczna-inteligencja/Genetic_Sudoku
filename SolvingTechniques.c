@@ -3,6 +3,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
+#include <time.h>
 #include "src/SolvingTechniques/Utils.h"
 #include "src/SolvingTechniques/Techniques.h"
 #include "Sudokus/SudokuReader.h"
@@ -25,6 +27,8 @@ gcc SolvingTechniques.c src/SolvingTechniques/Utils.c src/SolvingTechniques/Tech
 
 int main() {
 
+  //zmierz czas 
+  clock_t start = clock();
   printf("=================================================\n");
   printf("        SUDOKU SE GRADER - DIAGNOSTICS          \n");
   printf("=================================================\n");
@@ -48,7 +52,7 @@ int main() {
       printf("\n[ERROR] Could not load or empty file: %s\n", filenames[i]);
     }
   }
-
+  printf("\ntime taken: %.2f seconds\n", (double)(clock() - start) / CLOCKS_PER_SEC);
   printf("\nAll datasets processed.\n");
 
 
@@ -170,41 +174,3 @@ void testAllMethods(SudokuMethodRecord methodRecords[], int numMethods, SudokuRe
   printf("Najtrudniejsze rozwiazane Sudoku: %d (ocena: %s)\n", hardestSudoku + 1, sudokus[hardestSudoku].rating);
 }
 
-int validateSudoku(char* sudoku) {
-  // Sprawdzenie wierszy
-  for (int row = 0; row < 9; row++) {
-    int seen[10] = { 0 };
-    for (int col = 0; col < 9; col++) {
-      int val = sudoku[row * 9 + col] - '0';
-      if (val < 1 || val > 9 || seen[val]) return false;
-      seen[val] = 1;
-    }
-  }
-
-  // Sprawdzenie kolumn
-  for (int col = 0; col < 9; col++) {
-    int seen[10] = { 0 };
-    for (int row = 0; row < 9; row++) {
-      int val = sudoku[row * 9 + col] - '0';
-      if (val < 1 || val > 9 || seen[val]) return false;
-      seen[val] = 1;
-    }
-  }
-
-  // Sprawdzenie pudełek
-  for (int boxId = 0; boxId < 9; boxId++) {
-    int seen[10] = { 0 };
-    int boxStartRow = (boxId / 3) * 3;
-    int boxStartCol = (boxId % 3) * 3;
-
-    for (int r = 0; r < 3; r++) {
-      for (int c = 0; c < 3; c++) {
-        int val = sudoku[(boxStartRow + r) * 9 + (boxStartCol + c)] - '0';
-        if (val < 1 || val > 9 || seen[val]) return false;
-        seen[val] = 1;
-      }
-    }
-  }
-
-  return true;
-}
