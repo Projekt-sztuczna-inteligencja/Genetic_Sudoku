@@ -5,8 +5,8 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
-#include "src/SolvingTechniques/Utils.h"
-#include "src/SolvingTechniques/Techniques.h"
+#include "src/Rating/SolvingTechniques/Utils.h"
+#include "src/Rating/SolvingTechniques/Techniques.h"
 #include "Sudokus/SudokuReader.h"
 #include "src/Rating/Rater.h"
 
@@ -21,7 +21,6 @@ void runGraderDiagnostics(SudokuRecord records[], int numPuzzles, const char* da
 
 
 /*
-gcc SolvingTechniques.c src/SolvingTechniques/Utils.c src/SolvingTechniques/Techniques.c Sudokus/SudokuReader.c src/Rating/Rater.c
 */
 
 
