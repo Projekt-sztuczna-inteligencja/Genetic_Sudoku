@@ -48,7 +48,7 @@ Uruchom terminal w głównym katalogu projektu (tym, który zawiera foldery `Sol
 **Dla systemów Linux / macOS (.so):**
 
 ```bash
-gcc -shared -fPIC -O3 -o libsudoku.so SolvingTechniques/Utils.c SolvingTechniques/Techniques.c Rater/Rater.c
+gcc -shared -fPIC -O3 -o libsudoku.so src/Rating/SolvingTechniques/Utils.c src/Rating/SolvingTechniques/Techniques.c src/Rating/Rater.c
 ```
 
 **Dla systemów Windows (.dll):**
