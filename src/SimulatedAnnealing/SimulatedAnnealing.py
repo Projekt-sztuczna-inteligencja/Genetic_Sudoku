@@ -40,8 +40,8 @@ class SimulatedAnnealing(Generic[T]):
         i = 0
         # USUNIĘTO: self.score > 0, ponieważ nasz koszty będą ujemne (np. -5.2)
         while i < self.iterations and self.score > 0.1 and self.temperature > 0.00001:
-            # if(i % 200 == 0 or self.score < self.best_score * 1.5):
-            #     print(f"Iteracja {i+1}/{self.iterations} | Aktualna temperatura: {self.temperature:.4f} | Aktualny koszt: {self.score:.4f} | Najlepszy koszt: {self.best_score:.4f}")
+            if(i % 200 == 0):
+                print(f"Iteracja {i+1}/{self.iterations} | Aktualna temperatura: {self.temperature:.4f} | Aktualny koszt: {self.score:.4f} | Najlepszy koszt: {self.best_score:.4f}")
             newIndividual = self.change(self.individual)
             newScore = self.cost(newIndividual)
             

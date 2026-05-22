@@ -1,13 +1,15 @@
 import random
+from src.Rating.PerfectRater import get_se_rating
 from src.SimulatedAnnealing.SimulatedAnnealing import SimulatedAnnealing
 from src.Rating.Rater import Rate_sudoku
 from src.CSPSolver import CSPSolver # Podpinamy Twojego świetnego Solvera!
 
 class SA_SudokuGenerator(SimulatedAnnealing[list[bool]]):
-    def __init__(self, solved_board: str, initialTemperature: float, coolingRate: float, iterations: int, target_rating: float):
+    def __init__(self, solved_board: str, initialTemperature: float, coolingRate: float, iterations: int, target_rating: float, use_perfect_rater: bool = False):
         # solved_board to string 81 znaków z poprawnym rozwiązaniem
         self.solved_board = solved_board 
         self.target_rating = target_rating
+        self.use_perfect_rater = use_perfect_rater
         super().__init__(initialTemperature, coolingRate, iterations, list)
 
     def createRandomIndividual(self) -> list[bool]:
@@ -34,13 +36,18 @@ class SA_SudokuGenerator(SimulatedAnnealing[list[bool]]):
             return 1000.0  # Olbrzymia kara za brak jednego rozwiązania
 
         puzzle_str = self.apply_mask_to_str(individual)
-        rating = Rate_sudoku(puzzle_str)
+        if self.use_perfect_rater:
+            rating = get_se_rating(puzzle_str)
+        else:
+            rating = Rate_sudoku(puzzle_str)
         if rating < 0:
             return 800.0
         
         rating_penalty = 2 ** abs(rating - self.target_rating)
         if rating_penalty == 0:
             self.iterations = 0  # Natychmiast zakończ, jeśli osiągniemy idealny wynik
+        if rating_penalty <= 2.0:
+            print(f"🎉 Osiągnięto idealny rating! {rating} == {self.target_rating}")
         return rating_penalty - 1
 
     def change(self, individual: list[bool]) -> list[bool]:

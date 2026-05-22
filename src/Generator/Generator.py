@@ -38,7 +38,8 @@ def generuj(params=params['easy']) -> dict:
         initialTemperature=params['temp'],
         coolingRate=params['cooling'],
         iterations=params['iters'],
-        target_rating=params['target']
+        target_rating=params['target'],
+        use_perfect_rater=True  # Używamy PerfectRater dla lepszej jakości oceny
     )
    
     best_mask = generator.run() 
@@ -208,12 +209,14 @@ if __name__ == "__main__":
     print("=================================================\n")
     
     testy = ['easy', 'medium', 'hard', 'expert']
-    
-    for test in testy:
+    targets = [1.5, 2.5, 3.5, 5.0]
+    temp = {'temp': 20.0, 'cooling': 0.99, 'iters': 1000000, 'target': 5.0}  # Przykładowe parametry (możesz je dostosować)
+    for test in targets:
         print(f"Rozpoczynam generowanie dla: {test}...")
         start_time = time.time()
         
-        wynik = generuj(params[test])
+        temp['target'] = test
+        wynik = generuj(temp)
         
         elapsed_time = time.time() - start_time
         
