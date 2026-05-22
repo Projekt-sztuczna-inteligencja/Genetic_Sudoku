@@ -4,9 +4,10 @@ from src.Rating.Rater import Rate_sudoku
 from src.CSPSolver import CSPSolver # Podpinamy Twojego świetnego Solvera!
 
 class SA_SudokuGenerator(SimulatedAnnealing[list[bool]]):
-    def __init__(self, solved_board: str, initialTemperature: float, coolingRate: float, iterations: int):
+    def __init__(self, solved_board: str, initialTemperature: float, coolingRate: float, iterations: int, target_rating: float):
         # solved_board to string 81 znaków z poprawnym rozwiązaniem
         self.solved_board = solved_board 
+        self.target_rating = target_rating
         super().__init__(initialTemperature, coolingRate, iterations, list)
 
     def createRandomIndividual(self) -> list[bool]:
@@ -26,24 +27,21 @@ class SA_SudokuGenerator(SimulatedAnnealing[list[bool]]):
         return [int(self.solved_board[i]) if mask[i] else 0 for i in range(81)]
 
     def cost(self, individual: list[bool]) -> float:
-        # 1. Konwersja i weryfikacja unikalności
         board_ints = self.apply_mask_to_int_list(individual)
         solver = CSPSolver(board_ints)
         
-        # Jeśli nie ma dokładnie jednego rozwiązania -> olbrzymia kara
         if not solver.check_unique_solution():
-            return 1000.0  
+            return 1000.0  # Olbrzymia kara za brak jednego rozwiązania
 
-        # 2. Jeśli jest unikalne, sprawdzamy poziom trudności
         puzzle_str = self.apply_mask_to_str(individual)
         rating = Rate_sudoku(puzzle_str)
+        if rating < 0:
+            return 800.0
         
-        # 3. Dodatkowy cel: Im mniej podpowiedzi (clues), tym lepiej.
-        clue_count = sum(individual)
-        
-        # SA szuka najmniejszej wartości (dlatego dajemy minus przed ratingiem)
-        # Przykład: Rating 4.0 z 30 podpowiedziami da nam (-4.0) + (1.5) = -2.5
-        return -rating + (clue_count * 0.05) 
+        rating_penalty = 2 ** abs(rating - self.target_rating)
+        if rating_penalty == 0:
+            self.iterations = 0  # Natychmiast zakończ, jeśli osiągniemy idealny wynik
+        return rating_penalty - 1
 
     def change(self, individual: list[bool]) -> list[bool]:
         new_mask = individual[:]
