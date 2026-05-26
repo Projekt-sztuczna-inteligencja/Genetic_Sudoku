@@ -1,5 +1,5 @@
 import random
-from CSPSolver import CSPSolver
+from src.Rating.CSPSolver import CSPSolver
 from src.SudokuBoard import Board
 
 

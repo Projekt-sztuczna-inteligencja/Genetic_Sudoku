@@ -1,7 +1,7 @@
 import random
-from CSPSolver import CSPSolver
-from ExpertSystemGrader import ExpertSystemGrader
-from SudokuBoard import Board
+from src.Rating.CSPSolver import CSPSolver
+from src.Rating.ExpertSystemGrader import ExpertSystemGrader
+from src.SudokuBoard  import Board
 
 
 class SudokuFactory:
