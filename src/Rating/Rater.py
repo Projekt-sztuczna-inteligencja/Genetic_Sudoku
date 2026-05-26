@@ -4,10 +4,13 @@ import sys
 import time
 
 # 1. Załadowanie odpowiedniej biblioteki w zależności od systemu
+# Pobranie ścieżki katalogu, w którym fizycznie znajduje się plik Rater.py
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
 if sys.platform.startswith('win'):
-    lib_path = os.path.abspath('src/Rating/libsudoku.dll')
+    lib_path = os.path.join(current_dir, 'libsudoku.dll')
 else:
-    lib_path = os.path.abspath('src/Rating/libsudoku.so')
+    lib_path = os.path.join(current_dir, 'libsudoku.so')
 try:
     sudoku_lib = ctypes.CDLL(lib_path)
 except OSError:
