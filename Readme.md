@@ -124,5 +124,3 @@ Oto Twoje gotowe do druku Sudoku:
 ```
 
 ---
-
-*Projekt przygotowany w ramach nauki struktur algorytmicznych, systemów agentowych / eksperckich oraz problemów klasy CSP.*
